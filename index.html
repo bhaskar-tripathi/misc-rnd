@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+
+    <!-- JQuery Library -->
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+
+    <!-- Compressed CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/foundation-sites@6.4.3/dist/css/foundation.min.css"
+        integrity="sha256-GSio8qamaXapM8Fq9JYdGNTvk/dgs+cMLgPeevOYEx0= sha384-wAweiGTn38CY2DSwAaEffed6iMeflc0FMiuptanbN4J+ib+342gKGpvYRWubPd/+ sha512-QHEb6jOC8SaGTmYmGU19u2FhIfeG+t/hSacIWPpDzOp5yygnthL3JwnilM7LM1dOAbJv62R+/FICfsrKUqv4Gg=="
+        crossorigin="anonymous">
+
+    <!-- Compressed JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/foundation-sites@6.4.3/dist/js/foundation.min.js"
+        integrity="sha256-mRYlCu5EG+ouD07WxLF8v4ZAZYCA6WrmdIXyn1Bv9Vk= sha384-KzKofw4qqetd3kvuQ5AdapWPqV1ZI+CnfyfEwZQgPk8poOLWaabfgJOfmW7uI+AV sha512-0gHfaMkY+Do568TgjJC2iMAV0dQlY4NqbeZ4pr9lVUTXQzKu8qceyd6wg/3Uql9qA2+3X5NHv3IMb05wb387rA=="
+        crossorigin="anonymous"></script>
+
+    <!-- Font Awesome Library -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css"
+        integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous" />
+
+</head>
+
+<body>
+    <p>Google Calendar API Quickstart</p>
+
+    <!--Add buttons to initiate auth sequence and sign out-->
+    <input id="authorize_button" type="button" value="Authorize">
+    <!-- Authorize</input> -->
+    <input id="signout_button" type="button" value="Sign out">
+    <!-- Sign Out</button> -->
+    <input id="addEvent_button" type="button" style="margin: 10px 0px;" value="Add Recipe">
+    <!-- <input id="deleteEvent_button" type="button" style="margin: 10px 0px;" value="Delete Recipe"> -->
+
+    <pre id="content" style="white-space: pre-wrap;"></pre>
+
+    <!-- 
+    <script>
+        
+
+    </script> -->
+
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+            $(document).foundation();
+
+            $(".addToCal").on("click", function (event) {
+                event.stopPropagation();
+            });
+
+            $.getScript("https://apis.google.com/js/api.js", function () {
+                handleClientLoad();
+            });
+
+
+            // Client ID and API key from the Developer Console
+            var CLIENT_ID = '803650121348-q45tpl7gpaf83mm2b81oks4kesov2sd1.apps.googleusercontent.com';
+            var API_KEY = 'AIzaSyCeM1m73twcAewk29CbTe4IJIIc4U1hQkQ';
+
+            // Array of API discovery doc URLs for APIs used by the quickstart
+            var DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"];
+
+            // Authorization scopes required by the API; multiple scopes can be
+            // included, separated by spaces.
+            var SCOPES = "https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/calendar.events";
+
+            // var eventsURL = 'https://www.googleapis.com/calendar/v3/calendars/primary/events?key=' + API_KEY;
+            // var eventsURL = 'https://content.googleapis.com/calendar/v3/calendars/primary/events?key=' + API_KEY;
+
+            var authorizeButton = document.getElementById('authorize_button');
+            var signoutButton = document.getElementById('signout_button');
+            var addRecipeButton = document.getElementById('addEvent_button');
+            // var deleteRecipeButton = document.getElementById('deleteEvent_button');
+
+            /**
+             *  On load, called to load the auth2 library and API client library.
+             */
+            function handleClientLoad() {
+                gapi.load('client:auth2', initClient);
+            }
+
+            /**
+             *  Initializes the API client library and sets up sign-in state
+             *  listeners.
+             */
+            function initClient() {
+                gapi.client.init({
+                    apiKey: API_KEY,
+                    clientId: CLIENT_ID,
+                    discoveryDocs: DISCOVERY_DOCS,
+                    scope: SCOPES
+                }).then(function () {
+                    // Listen for sign-in state changes.
+                    gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatus);
+
+                    // Handle the initial sign-in state.
+                    updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
+                    authorizeButton.onclick = handleAuthClick;
+                    signoutButton.onclick = handleSignoutClick;
+                    addRecipeButton.onclick = addEvent;
+                   // deleteRecipeButton.onclick = deleteEvent;
+                }, function (error) {
+                    appendPre(JSON.stringify(error, null, 2));
+                });
+            }
+
+            /**
+             *  Called when the signed in status changes, to update the UI
+             *  appropriately. After a sign-in, the API is called.
+             */
+            function updateSigninStatus(isSignedIn) {
+                if (isSignedIn) {
+                    authorizeButton.style.display = 'none';
+                    signoutButton.style.display = 'block';
+                    //  listUpcomingEvents();
+                    getUpcomingEvents();
+                } else {
+                    authorizeButton.style.display = 'block';
+                    signoutButton.style.display = 'none';
+                }
+            }
+
+            /**
+             *  Sign in the user upon button click.
+             */
+            function handleAuthClick(event) {
+                event.preventDefault();
+                gapi.auth2.getAuthInstance().signIn();
+            }
+
+            /**
+             *  Sign out the user upon button click.
+             */
+            function handleSignoutClick(event) {
+                event.preventDefault();
+                gapi.auth2.getAuthInstance().signOut();
+            }
+
+            /**
+             * Append a pre element to the body containing the given message
+             * as its text node. Used to display the results of the API call.
+             *
+             * @param {string} message Text to be placed in pre element.
+             */
+            function appendPre(message) {
+                var pre = document.getElementById('content');
+                var textContent = document.createTextNode(message + '\n');
+                pre.appendChild(textContent);
+            }
+            function appendPreButton(message) {
+                //var pre = document.getElementById('content');
+                var pre = $("#content");
+                var button = $("<input type='button'>");
+                button.attr("data-event-id",message);
+                button.val("Delete this event");
+                button.click(deleteEvent);
+                pre.append(button);
+                pre.append($("<br>"));                
+            }
+
+            /**
+             * Print the summary and start datetime/date of the next ten events in
+             * the authorized user's calendar. If no events are found an
+             * appropriate message is printed.
+             */
+            function listUpcomingEvents() {
+                gapi.client.calendar.events.list({
+                    'calendarId': 'primary',
+                    'timeMin': (new Date()).toISOString(),
+                    'showDeleted': false,
+                    'singleEvents': true,
+                    'maxResults': 10,
+                    'orderBy': 'startTime'
+                }).then(function (response) {
+                    var events = response.result.items;
+                    appendPre('Upcoming events:');
+
+                    if (events.length > 0) {
+                        for (i = 0; i < events.length; i++) {
+                            var event = events[i];
+                            var when = event.start.dateTime;
+                            if (!when) {
+                                when = event.start.date;
+                            }
+                            appendPre(event.summary + ' (' + when + ')')
+                        }
+                    } else {
+                        appendPre('No upcoming events found.');
+                    }
+                });
+            }
+
+
+            function getUpcomingEvents() {
+                var authInst = gapi.auth2.getAuthInstance();
+                var authCode = authInst.currentUser.Ab.Zi.token_type + " " + authInst.currentUser.Ab.Zi.access_token;
+                var eventsURL = 'https://www.googleapis.com/calendar/v3/calendars/primary/events?access_token=' + authInst.currentUser.Ab.Zi.access_token;
+
+                $.ajax({
+                    'url': eventsURL,
+                    'method': 'get',
+                    //'authorization': authCode,
+                    //'calendarId': 'primary',
+                    'data': {
+                        'timeMin': (new Date()).toISOString(),
+                        'showDeleted': false,
+                        'singleEvents': true,
+                        'maxResults': 10,
+                        'orderBy': 'startTime'
+                    },
+
+                }).then(function (response) {
+                    var events = response.items;
+                    appendPre('Upcoming events:');
+
+                    if (events.length > 0) {
+                        for (i = 0; i < events.length; i++) {
+                            var event = events[i];
+                            var when = event.start.dateTime;
+                            if (!when) {
+                                when = event.start.date;
+                            }
+                            appendPre(event.summary + ' (' + when + ')');
+                            appendPreButton(event.id);
+                        }
+                    } else {
+                        appendPre('No upcoming events found.');
+                    }
+                });
+            }
+
+            function addEvent(event) {
+
+                event.preventDefault();
+
+                var authInst = gapi.auth2.getAuthInstance();
+                var authCode = authInst.currentUser.Ab.Zi.token_type + " " + authInst.currentUser.Ab.Zi.access_token;
+                var eventsURL = 'https://www.googleapis.com/calendar/v3/calendars/primary/events?access_token=' + authInst.currentUser.Ab.Zi.access_token;
+
+
+                var event = {
+                    'summary': 'A Great Recipe',
+                    //'location': '800 Howard St., San Francisco, CA 94103',
+                    'description': 'This is how you make tasty food',
+                    'colorId': "2",
+                    'start': {
+                        'dateTime': '2020-01-01T21:00:00-08:00',
+                        'timeZone': 'America/Los_Angeles'
+                    },
+                    'end': {
+                        'dateTime': '2020-01-01T22:00:00-08:00',
+                        'timeZone': 'America/Los_Angeles'
+                    },
+                    // 'recurrence': [
+                    //     'RRULE:FREQ=DAILY;COUNT=2'
+                    // ],
+                    // 'attendees': [
+                    //     { 'email': 'lpage@example.com' },
+                    //     { 'email': 'sbrin@example.com' }
+                    // ],
+                    'reminders': {
+                        'useDefault': false,
+                        'overrides': [
+                            // { 'method': 'email', 'minutes': 24 * 60 },
+                            { 'method': 'popup', 'minutes': 10 }
+                        ]
+                    }
+                };
+
+                var headers = {};
+                headers["Content-Type"] = "application/json ; charset=UTF-8";
+                $.ajax({
+                    'url': eventsURL,
+                    'method': 'post',
+                    'contentType': 'application/json ; charset=UTF-8',
+                    // 'headers': headers,
+                    'data': JSON.stringify(event)
+                }).then(function (response) {
+                    console.log(response);
+                    appendPre('Recipe Added to Calendar');
+                });
+
+            }
+
+            function deleteEvent(event) {
+
+                event.preventDefault();
+
+                var authInst = gapi.auth2.getAuthInstance();
+                var authCode = authInst.currentUser.Ab.Zi.token_type + " " + authInst.currentUser.Ab.Zi.access_token;
+                var eventId = this.dataset.eventId; // "rtkvjn2t8fn2hfahnugn38i790";
+                var eventsURL = 'https://www.googleapis.com/calendar/v3/calendars/primary/events/'+eventId+'?access_token=' + authInst.currentUser.Ab.Zi.access_token;
+
+                $.ajax({
+                    'url': eventsURL,
+                    'method': 'delete',
+                    'contentType': 'application/json ; charset=UTF-8',
+                    'data': JSON.stringify({'sendUpdates':'all'})
+                }).then(function(response){
+                    console.log(response);
+                    appendPre('Event'+ eventID + 'Deleted from Calendar');
+                });
+
+
+            }
+
+
+
+        });
+
+
+    </script>
+
+    <!-- <script async defer src="https://apis.google.com/js/api.js" onload="this.onload=function(){};handleClientLoad()"
+        onreadystatechange="if (this.readyState === 'complete') this.onload()">
+        </script> -->
+
+</body>
+
+</html>
