@@ -289,7 +289,7 @@
                 }).then(function (response) {
                     console.log(response);
                     appendPre('Recipe Added to Calendar');
-                    location.reload();
+                    setTimeout(function(){location.reload();},1000);
                 });
 
             }
@@ -311,7 +311,7 @@
                 }).then(function(response){
                     console.log(response);
                     appendPre('Event'+ eventID + 'Deleted from Calendar');
-                    location.reload();
+                    setTimeout(function(){location.reload();},1000);
                 });
 
 
