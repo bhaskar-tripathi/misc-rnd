@@ -289,6 +289,7 @@
                 }).then(function (response) {
                     console.log(response);
                     appendPre('Recipe Added to Calendar');
+                    setTimeout(getUpcomingEvents,2000);
                 });
 
             }
@@ -310,6 +311,7 @@
                 }).then(function(response){
                     console.log(response);
                     appendPre('Event'+ eventID + 'Deleted from Calendar');
+                    setTimeout(getUpcomingEvents,2000);
                 });
 
 
