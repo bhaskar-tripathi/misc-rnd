@@ -244,6 +244,10 @@
                 var authCode = authInst.currentUser.Ab.Zi.token_type + " " + authInst.currentUser.Ab.Zi.access_token;
                 var eventsURL = 'https://www.googleapis.com/calendar/v3/calendars/primary/events?access_token=' + authInst.currentUser.Ab.Zi.access_token;
 
+                var todayStart = new Date();
+                todayStart.setHours(19,0,0,0);
+                var todayEnd = new Date();
+                todayEnd.setHours(20,0,0,0);
 
                 var event = {
                     'summary': 'A Great Recipe',
@@ -251,11 +255,11 @@
                     'description': 'This is how you make tasty food',
                     'colorId': "2",
                     'start': {
-                        'dateTime': '2020-01-01T21:00:00-08:00',
+                        'dateTime': todayStart,
                         'timeZone': 'America/Los_Angeles'
                     },
                     'end': {
-                        'dateTime': '2020-01-01T22:00:00-08:00',
+                        'dateTime': todayEnd,
                         'timeZone': 'America/Los_Angeles'
                     },
                     // 'recurrence': [
